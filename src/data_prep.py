@@ -1,3 +1,5 @@
+import pandas as pd
+
 ### DisponibiliteAlimentaire_2017.csv
 
 df_main = pd.read_csv(
@@ -218,4 +220,7 @@ df_politique.Value.mean()  # -0.068
 
 ## Premier tri
 df_politique_new = df_politique[df_politique["Value"] >= 0]
-df_politique_new
+df_politique_new.to_csv(
+    r"C:\Users\Axel\Desktop\Data_Project\OC_Project_9\data\processed\df_politique_new.csv",
+    index=False,
+)
