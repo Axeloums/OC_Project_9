@@ -1,17 +1,14 @@
 import pandas as pd
 
-### DisponibiliteAlimentaire_2017.csv
+### Analyse PESTEL
 
-df_main = pd.read_csv(
-    r"C:\Users\Axel\Desktop\Data_Project\OC_Project_9\data\raw\DisponibiliteAlimentaire_2017.csv"
-)
-df_main
-
+### P - Politique :
 ### data/raw/political_stability.csv
 
 df_politique = pd.read_csv(
     r"C:\Users\Axel\Desktop\Data_Project\OC_Project_9\data\raw\political_stability.csv"
 )
+df_politique
 
 country_to_region = {
     "Afghanistan": "South Asia",
@@ -51,8 +48,11 @@ country_to_region = {
     "Central African Republic": "Sub-Saharan Africa",
     "Chad": "Sub-Saharan Africa",
     "Chile": "Latin America & the Caribbean",
+    "China": "East Asia and Pacific",
+    "China, mainland": "East Asia and Pacific",
     "China, Hong Kong SAR": "East Asia and Pacific",
     "China, Macao SAR": "East Asia and Pacific",
+    "China, Taiwan Province of": "East Asia and Pacific",
     "Colombia": "Latin America & the Caribbean",
     "Comoros": "Sub-Saharan Africa",
     "Congo": "Sub-Saharan Africa",
@@ -210,6 +210,33 @@ country_to_region = {
     "Yemen": "Middle East and North Africa",
     "Zambia": "Sub-Saharan Africa",
     "Zimbabwe": "Sub-Saharan Africa",
+    "Vietnam": "Viet Nam",
+    "St. Vincent and the Grenadines": "Saint Vincent and the Grenadines",
+    "United States": "United States of America",
+    "Tanzania": "United Republic of Tanzania",
+    "Turkey": "Türkiye",
+    "Slovak Republic": "Slovakia",
+    "West Bank and Gaza": "Palestine",
+    "Netherlands": "Netherlands (Kingdom of the)",
+    "Macedonia, FYR": "North Macedonia",
+    "Moldova": "Republic of Moldova",
+    "St. Lucia": "Saint Lucia",
+    "Lao PDR": "Lao People's Democratic Republic",
+    "Korea, Rep.": "Republic of Korea",  # Peut aussi être "South Korea"
+    "St. Kitts and Nevis": "Saint Kitts and Nevis",
+    "Kyrgyz Republic": "Kyrgyzstan",
+    "Iran, Islamic Rep.": "Iran (Islamic Republic of)",
+    "Hong Kong SAR, China": "China, Hong Kong SAR",
+    "Gambia, The": "Gambia",
+    "United Kingdom": "United Kingdom of Great Britain and Northern Ireland",
+    "Micronesia, Fed. Sts.": "Micronesia (Federated States of)",
+    "Egypt, Arab Rep.": "Egypt",
+    "Czech Republic": "Czechia",
+    "Congo, Rep.": "Congo",
+    "Congo, Dem. Rep.": "Democratic Republic of the Congo",
+    "Cote d'Ivoire": "Côte d'Ivoire",  # Assure que l'accent est inclus
+    "Bolivia": "Bolivia (Plurinational State of)",
+    "Bahamas, The": "Bahamas",
 }
 
 df_politique["Region"] = df_politique["Area"].map(country_to_region)
@@ -224,3 +251,123 @@ df_politique_new.to_csv(
     r"C:\Users\Axel\Desktop\Data_Project\OC_Project_9\data\processed\df_politique_new.csv",
     index=False,
 )
+df_politique_new
+
+### E - Economique
+### Calcul du GNI par hab
+df_gni = pd.read_csv(
+    r"C:\Users\Axel\Desktop\Data_Project\OC_Project_9\data\raw\GNI Per Capita & Income Thresholds_data.csv",
+    sep=";",
+)
+
+df_gni = df_gni[df_gni["Year"] == 2017]
+
+
+### appliquer les Threshold
+def classify_gni(value):
+    if value >= 12055:
+        return "Upper Middle / High"
+    elif value >= 3895:
+        return "Lower Middle / Upper Middle"
+    else:
+        return "Low / Lower Middle"
+
+
+df_gni["Class"] = df_gni["Max. Ny Gnp Pcap Cd"].apply(classify_gni)
+df_gni = df_gni.dropna(subset=["Countryname", "Max. Ny Gnp Pcap Cd"])
+df_gni = df_gni[["Countryname", "Max. Ny Gnp Pcap Cd", "Class"]]
+
+df_gni["Region"] = df_gni["Countryname"].map(country_to_region)
+nan_regions = df_gni[df_gni["Region"].isna()]
+nan_regions
+
+# Liste des pays à remplacer
+country_name_mapping = {
+    "Vietnam": "Viet Nam",
+    "St. Vincent and the Grenadines": "Saint Vincent and the Grenadines",
+    "United States": "United States of America",
+    "Tanzania": "United Republic of Tanzania",
+    "Turkey": "Türkiye",
+    "Slovak Republic": "Slovakia",
+    "West Bank and Gaza": "Palestine",
+    "Netherlands": "Netherlands (Kingdom of the)",
+    "Macedonia, FYR": "North Macedonia",
+    "Moldova": "Republic of Moldova",
+    "St. Lucia": "Saint Lucia",
+    "Lao PDR": "Lao People's Democratic Republic",
+    "Korea, Rep.": "Republic of Korea",  # Peut aussi être "South Korea"
+    "St. Kitts and Nevis": "Saint Kitts and Nevis",
+    "Kyrgyz Republic": "Kyrgyzstan",
+    "Iran, Islamic Rep.": "Iran (Islamic Republic of)",
+    "Hong Kong SAR, China": "China, Hong Kong SAR",
+    "Gambia, The": "Gambia",
+    "United Kingdom": "United Kingdom of Great Britain and Northern Ireland",
+    "Micronesia, Fed. Sts.": "Micronesia (Federated States of)",
+    "Egypt, Arab Rep.": "Egypt",
+    "Czech Republic": "Czechia",
+    "Congo, Rep.": "Congo",
+    "Congo, Dem. Rep.": "Democratic Republic of the Congo",
+    "Cote d'Ivoire": "Côte d'Ivoire",  # Assure que l'accent est inclus
+    "Bolivia": "Bolivia (Plurinational State of)",
+    "Bahamas, The": "Bahamas",
+}
+
+df_gni["Countryname"] = df_gni["Countryname"].replace(country_name_mapping)
+df_gni["Region"] = df_gni["Countryname"].map(country_to_region)
+
+mean_gni_by_region = (
+    df_gni.groupby("Region")["Max. Ny Gnp Pcap Cd"]
+    .mean()
+    .sort_values(ascending=False)
+    .round()
+    .reset_index()
+)
+mean_gni_by_region
+
+### DisponibiliteAlimentaire_2017.csv
+
+### Focus sur les exportations
+
+df_main = pd.read_csv(
+    r"C:\Users\Axel\Desktop\Data_Project\OC_Project_9\data\raw\DisponibiliteAlimentaire_2017.csv"
+)
+df_main.Élément.unique
+
+df_main_export = df_main[df_main["Élément"] == "Exportations - Quantité"]
+df_main_export = df_main_export[
+    (df_main_export["Produit"] == "Viande de Volailles")
+    & (df_main_export["Valeur"] > 0)
+]
+df_main_export = df_main_export[["Code zone", "Valeur", "Unité"]]
+df_main_export
+
+df_table_correspondance = pd.read_csv(
+    r"C:\Users\Axel\Desktop\Data_Project\OC_Project_9\data\raw\table_correspondance_pays.csv"
+)
+df_table_correspondance = df_table_correspondance[["Country Code", "Country"]]
+df_table_correspondance = df_table_correspondance.drop_duplicates(
+    subset=["Country Code"]
+)
+df_table_correspondance
+
+df_merged = pd.merge(
+    df_main_export,
+    df_table_correspondance,
+    left_on="Code zone",
+    right_on="Country Code",
+    how="left",
+)
+df_merged["Region"] = df_merged["Country"].map(country_to_region)
+df_merged.sort_values(by="Valeur", ascending=False)
+
+df_export_region = (
+    df_merged.groupby("Region")["Valeur"]
+    .sum()
+    .sort_values(ascending=False)
+    .reset_index()
+)
+df_export_region
+
+### Socio Culturel
+
+### Faire avec la colonne Disponibilité alimentaire en quantité (kg/personne/an)
